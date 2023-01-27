@@ -1,0 +1,121 @@
+---
+title: "Development"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Development}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, include=FALSE}
+# Keep examples reproducible in newer R versions and set seed
+RNGversion("3.6.0")
+set.seed(12345)
+```
+
+## Setup `clugenr` development
+
+Clone the package, `cd` into to the package's folder and start R:
+
+```plaintext
+$ git clone https://github.com/clugen/clugenr.git
+$ cd clugenr
+```
+
+Developing `clugenr` requires [devtools], thus make sure it's installed before
+continuing. Open an R prompt at the `clugenr` folder and install `clugenr`'s
+development dependencies:
+
+```R
+devtools::install_dev_deps()
+```
+
+The package can be tested as follows:
+
+```R
+devtools::test()
+```
+
+There are four levels of testing, by increasing thoroughness (and slowness):
+`cran`, `ci`, `normal` and `full`. The first two run by default on CRAN and CI
+environments, respectively. The third one, `normal`, is the default mode when
+running the tests locally, and may take some time (10-20 minutes). The last one,
+`full` is more thorough and can take a few hours. It's possible to define the
+tests thoroughness by setting the `CLUGENR_TEST_MODE` environment variable. For
+example, to simulate how tests would run in CRAN as follows:
+
+```R
+Sys.setenv(CLUGENR_TEST_MODE = "cran")
+devtools::test()
+Sys.unsetenv("CLUGENR_TEST_MODE")
+```
+
+The following instruction updates the documentation, then builds and checks the
+package locally:
+
+```R
+devtools::check()
+```
+
+It's also possible to define the environment in which to run the tests when
+performing the check:
+
+```R
+Sys.setenv(CLUGENR_TEST_MODE = "ci")
+devtools::check()
+Sys.unsetenv("CLUGENR_TEST_MODE")
+```
+
+Create or update the generated documentation in `man/`, file collation and
+`NAMESPACE`:
+
+```R
+devtools::document()
+```
+
+Build `clugenr`'s website (requires [pkgdown], [ggplot2], [patchwork] and
+[rgl]):
+
+```R
+pkgdown::build_site()
+# Can also be done with devtools::build_site()
+# In either case add option `preview = F` to avoid opening the browser
+```
+
+Install the package locally with:
+
+```R
+devtools::install()
+```
+
+Check that it works:
+
+```{r, out.width = "100%", dpi = 200}
+library(clugenr)
+x <- clugen(2, 5, 800, c(-1, 1), 0.6, c(4, 6), 5, 0.4, 0.5)
+plot(x$points, col = x$clusters, xlab = "x", ylab = "y", asp = 1)
+```
+
+## Code style
+
+To contribute to `clugenr`, follow the [tidyverse style guide]. Some highlights
+include, but are not limited to:
+
+* File encoding: UTF-8
+* Indentation: 2 spaces (no tabs)
+* Line size limit: 80 chars
+* Newlines: Unix style, i.e. LF or `\n`
+
+[devtools]: https://devtools.r-lib.org/
+[pkgdown]: https://pkgdown.r-lib.org/
+[ggplot2]: https://ggplot2.tidyverse.org/
+[patchwork]: https://patchwork.data-imaginist.com/index.html
+[rgl]: https://dmurdoch.github.io/rgl/
+[tidyverse style guide]: https://style.tidyverse.org/index.html
