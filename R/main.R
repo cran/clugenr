@@ -23,8 +23,9 @@
 #' @param num_dims Number of dimensions.
 #' @param num_clusters Number of clusters to generate.
 #' @param num_points Total number of points to generate.
-#' @param direction Average direction of the cluster-supporting lines (vector of
-#' length `num_dims`).
+#' @param direction Average direction of the cluster-supporting lines. Can be
+#' a vector of length `num_dims` (same direction for all clusters) or a
+#' matrix of size `num_clusters` x `num_dims` (one direction per cluster).
 #' @param angle_disp Angle dispersion of cluster-supporting lines (radians).
 #' @param cluster_sep Average cluster separation in each dimension (vector of
 #' length `num_dims`).
@@ -80,13 +81,13 @@
 #' specify a custom function for this purpose, which must follow [llengths]
 #' signature.
 #' @param angle_deltas_fn Distribution of line angle differences with respect to
-#' `direction`. By default, the angles between `direction` and the direction of
-#' cluster-supporting lines are determined by the [angle_deltas] function, which
-#' uses the wrapped normal distribution (\mjeqn{\mu=0}{μ=0},
-#' \mjeqn{\sigma=}{σ=} `angle_disp` ) with support in the interval
-#' \mjeqn{\left[-\pi/2,\pi/2\right]}{[-π/2, π/2]}. This parameter allows the
-#' user to specify a custom function for this purpose, which must follow
-#' [angle_deltas] signature.
+#' `direction`. By default, the angles between the main `direction` of each
+#' cluster and the final directions of their cluster-supporting lines are
+#' determined by the [angle_deltas] function, which uses the wrapped normal
+#' distribution (\mjeqn{\mu=0}{μ=0}, \mjeqn{\sigma=}{σ=} `angle_disp` ) with
+#' support in the interval \mjeqn{\left[-\pi/2,\pi/2\right]}{[-π/2, π/2]}. This
+#' parameter allows the user to specify a custom function for this purpose,
+#' which must follow [angle_deltas] signature.
 #' @param seed An integer used to initialize the PRNG, allowing for reproducible
 #' results. If specified, `seed` is simply passed to [set.seed].
 #' @return A named list with the following elements:
@@ -100,7 +101,7 @@
 #'   each cluster.
 #' - `centers`: A `num_clusters` x `num_dims` matrix with the
 #'   coordinates of the cluster centers.
-#' - `directions`: A `num_clusters` x `num_dims` matrix with the
+#' - `directions`: A `num_clusters` x `num_dims` matrix with the final
 #'   direction of each cluster-supporting line.
 #' - `angles`: A `num_clusters` x 1 vector with the angles between the
 #'   cluster-supporting lines and the main direction.
@@ -134,15 +135,36 @@ clugen <- function(num_dims, num_clusters, num_points, direction, angle_disp,
     stop("Number of clusters, `num_clust`, must be > 0")
   }
 
-  # Check that direction vector has magnitude > 0
-  if (isTRUE(all.equal(norm(direction, "2"), 0))) {
-    stop("`direction` must have magnitude > 0")
+  # Is direction a vector or a matrix?
+  if (is.vector(direction) ||
+      (is.array(direction) && length(dim(direction)) == 1)) {
+    # If a main direction vector was given, transpose it, so we can treat it
+    # like a matrix later
+    direction <- matrix(direction, ncol = length(direction))
+  } else if (is.matrix(direction)) {
+    # If a matrix was given (i.e. a main direction is given for each cluster),
+    # check if the number of directions is the same as the number of clusters
+    dir_size_1 <- dim(direction)[1]
+    if (dir_size_1 != num_clusters) {
+      stop("Number of rows in `direction` must be the same as the number of ",
+           "clusters (", dir_size_1, " != ", num_clusters, ")")
+    }
+  } else {
+    # The `direction` array must be a vector or a matrix, so if we get here
+    # it means we have invalid arguments
+    stop("`direction` must be a vector (1D array) or a matrix (2D array)")
   }
 
-  # Check that direction has num_dims dimensions
-  if (length(direction) != num_dims) {
-    stop("Length of `direction` must be equal to `num_dims` (",
-         length(direction), " != ", num_dims, ")")
+  # Check that `direction` has num_dims dimensions
+  dir_size_2 <- dim(direction)[2]
+  if (dir_size_2 != num_dims) {
+    stop("Length of directions in `direction` must be equal to `num_dims` (",
+         dir_size_2, " != ", num_dims, ")")
+  }
+
+  # Check that all directions in `direction` have magnitude > 0
+  if (isTRUE(all.equal(min(apply(direction, 1, norm, type = "2")), 0))) {
+    stop("`direction` must have magnitude > 0")
   }
 
   # If allow_empty is false, make sure there are enough points to distribute
@@ -151,7 +173,6 @@ clugen <- function(num_dims, num_clusters, num_points, direction, angle_disp,
     stop("A total of ", num_points, " points is not enough for ",
          num_clusters, " non-empty clusters")
   }
-
 
   # Check that cluster_sep has num_dims dimensions
   if (length(cluster_sep) != num_dims) {
@@ -223,8 +244,18 @@ clugen <- function(num_dims, num_clusters, num_points, direction, angle_disp,
   # Determine cluster properties #
   # ############################ #
 
-  # Normalize main direction
-  direction <- direction / norm(direction, "2")
+  # Normalize main direction(s)
+  direction <- matrix(apply(direction, 1, function(x) x / norm(x, "2")),
+                      ncol = num_dims,
+                      byrow = TRUE)
+
+  # If only one main direction was given, expand it for all clusters
+  if (dim(direction)[1] == 1) {
+    direction <- matrix(direction,
+                        nrow = num_clusters,
+                        ncol = length(direction),
+                        byrow = TRUE)
+  }
 
   # Determine cluster sizes
   cluster_sizes <- clusizes_fn(num_clusters, num_points, allow_empty)
@@ -243,11 +274,11 @@ clugen <- function(num_dims, num_clusters, num_points, direction, angle_disp,
   cluster_angles <- angle_deltas_fn(num_clusters, angle_disp)
 
   # Determine normalized cluster directions
-  cluster_directions <- matrix(data = 0, nrow = num_clusters, ncol = num_dims)
-  for (i in 1:num_clusters) {
-    cluster_directions[i, ] <- rand_vector_at_angle(direction,
-                                                    cluster_angles[i])
-  }
+  cluster_directions <- matrix(mapply(rand_vector_at_angle,
+                                      asplit(direction, 1),
+                                      cluster_angles),
+                               nrow = num_clusters,
+                               byrow = TRUE)
 
   # ################################# #
   # Determine points for each cluster #
@@ -290,10 +321,6 @@ clugen <- function(num_dims, num_clusters, num_points, direction, angle_disp,
                             cluster_directions[i, ],
                             ptproj_dist_fn_center)
     point_projections[idx_start:idx_end, ] <- proj
-
-    # If we only have one point in this cluster, convert proj to matrix,
-    # which is the format expected by pt_from_proj_fn
-    if (is.vector(proj)) dim(proj) <- c(1, num_dims)
 
     # Determine points from their projections on the line
     points[idx_start:idx_end, ] <- pt_from_proj_fn(proj,

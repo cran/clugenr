@@ -31,7 +31,9 @@ for (i in seq.int(1, nrow(targs))) {
   set.seed(seed)
 
   # Create combination of seed-depending parameters (line directions + clu seps)
-  tsargs <- expand.grid(direc = asplit(get_vecs(ndirs, nd), 1),
+  tsargs <- expand.grid(direc = append(asplit(get_vecs(ndirs, nd), 1),
+                                       list(matrix(rnorm(nclu * nd),
+                                                   ncol = nd))),
                         clusep = asplit(get_clu_seps(nd), 1))
 
   # Loop through line directions and line centers
@@ -79,8 +81,18 @@ for (i in seq.int(1, nrow(targs))) {
         # Check that cluster directions have the correct angles with the main
         # direction
         if (nd > 1) {
+          # In case direction is just a vector, repeat it num_cluster times
+          # into a matrix...
+          if (is.vector(direc) ||
+              (is.array(direc) && length(dim(direc)) == 1)) {
+            direc <- matrix(direc,
+                            nrow = nclu,
+                            ncol = length(direc),
+                            byrow = TRUE)
+          }
+          # ...so we can check each cluster direction separately
           for (i in 1:nclu) {
-            expect_equal(angle_btw(direc, r$directions[i, ]),
+            expect_equal(angle_btw(direc[i, ], r$directions[i, ]),
                          abs(r$angles[i]))
           }
         }
@@ -230,6 +242,42 @@ for (i in seq.int(1, nrow(targs))) {
   }
 }
 
+# ##################### #
+# Reproducibility tests #
+# ##################### #
+
+# Valid parameters
+nd <- 2
+nclu <- 4
+tpts <- 300
+direc <- c(1, 1)
+astd <- pi / 64
+clusep <- c(7, 6.5)
+len_mu <- 4.1
+len_std <- 0.5
+lat_std <- 0.2
+
+for (seed in seeds) {
+
+  test_that(paste0("clugen reproducibility: seed=", seed), {
+
+    # Get results for run 1 with current seed
+    expect_warning(r1 <- clugen(nd, nclu, tpts, direc, astd, clusep,
+                                len_mu, len_std, lat_std,
+                                seed = seed),
+                   regexp = NA)
+
+    # Get results for run 2 with current seed
+    expect_warning(r2 <- clugen(nd, nclu, tpts, direc, astd, clusep,
+                                len_mu, len_std, lat_std,
+                                seed = seed),
+                   regexp = NA)
+
+    # Check that results are exactly the same
+    expect_equal(r1, r2)
+  })
+}
+
 # ######################## #
 # Test clugen() exceptions #
 # ######################## #
@@ -344,9 +392,47 @@ for (seed in seeds) {
                              angle_deltas_fn = langles_fn,
                              seed = seed),
                  regexp = paste0(
-                   "Length of `direction` must be equal to `num_dims` (",
-                   length(bad_dir), " != ", nd, ")"),
+                   "Length of directions in `direction` must be equal to ",
+                   "`num_dims` (", length(bad_dir), " != ", nd, ")"),
                  fixed = TRUE)
+
+    # Specific direction for each cluster requires one direction per cluster
+    expect_error(r <- clugen(nd, nclu, tpts,
+                             # but we're passing one extra direction
+                             matrix(rnorm(nd * (nclu + 1)), ncol = nd),
+                             astd, clusep,
+                             len_mu, len_std, lat_std,
+                             allow_empty = ae,
+                             cluster_offset = clu_off,
+                             proj_dist_fn = prj_dist,
+                             point_dist_fn = pt_dist,
+                             clusizes_fn = csizes_fn,
+                             clucenters_fn = ccenters_fn,
+                             llengths_fn = llengths_fn,
+                             angle_deltas_fn = langles_fn,
+                             seed = seed),
+                 regexp = paste0("Number of rows in `direction` must be the ",
+                                 "same as the number of clusters (",
+                                 nclu + 1, " != ", nclu, ")"),
+                 fixed = TRUE)
+
+    # Direction needs to be a 1D array (vector) or 2D array (matrix)
+    expect_error(r <- clugen(nd, nclu, tpts,
+                               # but we're passing a 3D array
+                               array(rnorm(nd * nclu * 2), c(nd, nclu, 2)),
+                               astd, clusep, len_mu, len_std, lat_std,
+                               allow_empty = ae,
+                               cluster_offset = clu_off,
+                               proj_dist_fn = prj_dist,
+                               point_dist_fn = pt_dist,
+                               clusizes_fn = csizes_fn,
+                               clucenters_fn = ccenters_fn,
+                               llengths_fn = llengths_fn,
+                               angle_deltas_fn = langles_fn,
+                               seed = seed),
+                   regexp = paste0("`direction` must be a vector (1D array) ",
+                                   "or a matrix (2D array)"),
+                   fixed = TRUE)
 
     # cluster_sep needs to have nd dims
     bad_clusep <- c(10, 10)
