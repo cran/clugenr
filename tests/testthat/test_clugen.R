@@ -44,10 +44,10 @@ for (i in seq.int(1, nrow(targs))) {
     clusep <- tsargs[j, "clusep"][[1]]
 
     # Determine test name for current parameter set
-    test_desc <- paste0("clugen mandatory params: nd=", nd,
-                        ", nclu=", nclu, ", tpts=", tpts,
-                        ", astd=", astd, ", len=", len, ", len_std=", len_std,
-                        ", lat_std=", lat_std,
+    test_desc <- paste0("clugen mandatory params: ",
+                        "seed=", seed, ", nd=", nd, ", nclu=", nclu,
+                        ", tpts=", tpts, ", astd=", astd, ", len=", len,
+                        ", len_std=", len_std, ", lat_std=", lat_std,
                         ", direc=[", paste(direc, collapse = ", "),
                         "], clusep=[", paste(clusep, collapse = ", "), "]")
 
@@ -162,6 +162,7 @@ for (i in seq.int(1, nrow(targs))) {
 
   # Get current parameters
   seed <- targs[i, "seed"]
+  nd <- targs[i, "nd"]
   ae <- targs[i, "ae"]
   prjdist_fn <- targs[i, "prjdist_fn"][[1]]
   ptdist_fn <- targs[i, "ptdist_fn"][[1]]
@@ -169,6 +170,9 @@ for (i in seq.int(1, nrow(targs))) {
   cctr_fn <- targs[i, "cctr_fn"][[1]]
   llen_fn <- targs[i, "llen_fn"][[1]]
   lang_fn <- targs[i, "lang_fn"][[1]]
+
+  # Set seed
+  set.seed(seed)
 
   # Create combination of seed-depending parameters (line directions + clu seps)
   tsargs <- expand.grid(direc = asplit(get_vecs(ndirs, nd), 1),
@@ -182,14 +186,24 @@ for (i in seq.int(1, nrow(targs))) {
     clusep <- tsargs[j, "clusep"][[1]]
 
     # Determine test name for current parameter set
-    test_desc <- paste0("clugen optional params: ae=", ae,
-                        ", nclu=", nclu, ", tpts=", tpts,
+    test_desc <- paste0("clugen optional params: ",
+                        "seed = ", seed, ", nd=", nd, ", nclu=", nclu,
+                        ", tpts=", tpts, "ae=", ae,
                         ", ptdist_fn='",
                         format(prjdist_fn)[length(format(prjdist_fn))],
                         "', ptoff_fn='",
                         format(ptdist_fn)[length(format(ptdist_fn))],
                         "', czn_fn='",
                         format(csz_fn)[length(format(csz_fn))],
+                        "'",
+                        "', cctr_fn='",
+                        format(cctr_fn)[length(format(cctr_fn))],
+                        "'",
+                        "', llen_fn='",
+                        format(llen_fn)[length(format(llen_fn))],
+                        "'",
+                        "', lang_fn='",
+                        format(lang_fn)[length(format(lang_fn))],
                         "'")
 
     # Perform tests for current parameter set
@@ -240,6 +254,102 @@ for (i in seq.int(1, nrow(targs))) {
       }
     })
   }
+}
+
+# ######################################## #
+# Test clugen() optional direct parameters #
+# ######################################## #
+
+# Valid arguments
+astd <- pi / 333
+len_mu <- 6
+len_std <- 1.1
+lat_std <- 1.6
+
+# Create parameter combinations to test
+if (testthat:::on_cran() || is_test_mode("cran")) {
+  # Light tests, for CRAN
+  targs <- expand.grid(seed = seeds, nd = 2, nclu = 6)
+} else {
+  # Other testing modes will be more thorough
+  targs <- expand.grid(seed = seeds, nd = c(1, 5), nclu = c(1, 6))
+}
+
+# Loop through all parameter combinations
+for (i in seq.int(1, nrow(targs))) {
+
+  # Get current parameters
+  seed <- targs[i, "seed"]
+  nd <- targs[i, "nd"]
+  nclu <- targs[i, "nclu"]
+
+  # Set seed
+  set.seed(seed)
+
+  # Create combination of seed-depending parameters
+  direc <- rnorm(nd)
+  clusep <- 100 * rnorm(nd)
+  csz_direct <- sample(1:100, nclu, replace = TRUE)
+  cctr_direct <- matrix(100 * rnorm(nd * nclu), nrow = nclu)
+  llen_direct <- runif(nclu, min = 0, max = 100)
+  lang_direct <- runif(nclu, min = -pi / 2, max = pi / 2)
+  tpts <- sum(csz_direct)
+
+  # Determine test name for current parameter set
+  test_desc <- paste0("clugen optional params (direct): ",
+                      "seed = ", seed, ", nd=", nd, ", nclu=", nclu,
+                      ", direc=[", paste(direc, collapse = ", "),
+                      ", clusep=[", paste(clusep, collapse = ", "),
+                      ", csz_direct=[", paste(csz_direct, collapse = ", "),
+                      ", cctr_direct=[", paste(cctr_direct, collapse = ", "),
+                      ", llen_direct=[", paste(llen_direct, collapse = ", "),
+                      ", lang_direct=[", paste(lang_direct, collapse = ", "))
+
+  # Perform tests for current parameter set
+  test_that(test_desc, {
+
+    # ...in which case it runs without problem
+    expect_warning(r <- clugen(nd, nclu, tpts, direc, astd,
+                               clusep, len_mu, len_std, lat_std,
+                               allow_empty = ae,
+                               clusizes_fn = csz_direct,
+                               clucenters_fn = cctr_direct,
+                               llengths_fn = llen_direct,
+                               angle_deltas_fn = lang_direct,
+                               seed = seed),
+                   regexp = NA)
+
+    # Check dimensions of result variables
+    expect_equal(dim(r$points), c(tpts, nd))
+    expect_equal(length(r$clusters), tpts)
+    expect_equal(dim(r$projections), c(tpts, nd))
+    expect_equal(length(r$sizes), nclu)
+    expect_equal(dim(r$centers), c(nclu, nd))
+    expect_equal(dim(r$directions), c(nclu, nd))
+    expect_equal(length(r$angles), nclu)
+    expect_equal(length(r$lengths), nclu)
+
+    # Check point cluster indexes
+    if (!ae) {
+      expect_equal(unique(as.numeric(r$clusters)), 1:nclu)
+    } else {
+      expect_true(all(as.numeric(r$clusters) <= nclu))
+    }
+
+    # Check total points
+    expect_equal(sum(r$sizes), tpts)
+    # This might not be the case if the specified clusize_fn does not obey
+    # the total number of points
+
+    # Check that cluster directions have the correct angles with the main
+    # direction
+    if (nd > 1) {
+      for (i in 1:nclu) {
+        expect_equal(angle_btw(direc, r$directions[i, ]),
+                     abs(r$angles[i]))
+      }
+    }
+  })
 }
 
 # ##################### #
@@ -531,6 +641,71 @@ for (seed in seeds) {
                              angle_deltas_fn = langles_fn,
                              seed = seed),
                  regexp = "argument")
+
+    # Invalid direct clusizes
+    expect_error(r <- clugen(nd, nclu, tpts, direc, astd, clusep,
+                             len_mu, len_std, lat_std,
+                             allow_empty = ae,
+                             cluster_offset = clu_off,
+                             proj_dist_fn = prj_dist,
+                             point_dist_fn = pt_dist,
+                             clusizes_fn = sample(1:(tpts * nclu), nclu + 1),
+                             clucenters_fn = ccenters_fn,
+                             llengths_fn = llengths_fn,
+                             angle_deltas_fn = langles_fn,
+                             seed = seed),
+                 regexp = paste0("`clusizes_fn` has to be either a function or",
+                                 " a `num_clusters`-sized vector"),
+                 fixed = TRUE)
+
+    # Invalid direct clucenters
+    expect_error(r <- clugen(nd, nclu, tpts, direc, astd, clusep,
+                             len_mu, len_std, lat_std,
+                             allow_empty = ae,
+                             cluster_offset = clu_off,
+                             proj_dist_fn = prj_dist,
+                             point_dist_fn = pt_dist,
+                             clusizes_fn = csizes_fn,
+                             clucenters_fn = matrix(rnorm(nd * (nclu + 1)),
+                                                    nrow = nclu + 1),
+                             llengths_fn = llengths_fn,
+                             angle_deltas_fn = langles_fn,
+                             seed = seed),
+                 regexp = paste0("clucenters_fn has to be either a function or",
+                                 " a matrix of size `num_clusters` x `num_dims`"),
+                 fixed = TRUE)
+
+    # Invalid direct llengths
+    expect_error(r <- clugen(nd, nclu, tpts, direc, astd, clusep,
+                             len_mu, len_std, lat_std,
+                             allow_empty = ae,
+                             cluster_offset = clu_off,
+                             proj_dist_fn = prj_dist,
+                             point_dist_fn = pt_dist,
+                             clusizes_fn = csizes_fn,
+                             clucenters_fn = ccenters_fn,
+                             llengths_fn = runif(nclu + 1),
+                             angle_deltas_fn = langles_fn,
+                             seed = seed),
+                 regexp = paste0("`llengths_fn` has to be either a function or",
+                                 " a `num_clusters`-sized vector"),
+                 fixed = TRUE)
+
+    # Invalid direct langles
+    expect_error(r <- clugen(nd, nclu, tpts, direc, astd, clusep,
+                             len_mu, len_std, lat_std,
+                             allow_empty = ae,
+                             cluster_offset = clu_off,
+                             proj_dist_fn = prj_dist,
+                             point_dist_fn = pt_dist,
+                             clusizes_fn = csizes_fn,
+                             clucenters_fn = ccenters_fn,
+                             llengths_fn = llengths_fn,
+                             angle_deltas_fn = runif(nclu + 1),
+                             seed = seed),
+                 regexp = paste0("`angle_deltas_fn` has to be either a function",
+                                 " or a `num_clusters`-sized vector"),
+                 fixed = TRUE)
 
   })
 }

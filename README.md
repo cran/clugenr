@@ -3,13 +3,13 @@
 [![docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://clugen.github.io/clugenr/)
 [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/clugenr)](https://CRAN.R-project.org/package=clugenr)
 ![Downloads](https://cranlogs.r-pkg.org/badges/grand-total/clugenr)
-[![MIT](https://img.shields.io/badge/license-MIT-yellowgreen.svg)](https://tldrlegal.com/license/mit-license)
+[![MIT](https://img.shields.io/badge/license-MIT-yellowgreen.svg)](https://www.tldrlegal.com/license/mit-license)
 
 # clugenr <img src="man/figures/logo.png" align="right" />
 
 ## Summary
 
-**clugenr** is an [R] implementation of the *clugen* algorithm generating
+**clugenr** is an [R] implementation of the *clugen* algorithm for generating
 multidimensional clusters. Each cluster is supported by a line segment, the
 position, orientation and length of which guide where the respective points are
 placed.
