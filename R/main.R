@@ -120,10 +120,11 @@
 #' # 3D example
 #' x <- clugen(3, 5, 1000, c(2, 3, 4), 0.5, c(15, 13, 14), 7, 1, 2)
 clugen <- function(num_dims, num_clusters, num_points, direction, angle_disp,
-  cluster_sep, llength, llength_disp, lateral_disp,
-  allow_empty = FALSE, cluster_offset = NA, proj_dist_fn = "norm",
-  point_dist_fn = "n-1", clusizes_fn = clusizes, clucenters_fn = clucenters,
-  llengths_fn = llengths, angle_deltas_fn = angle_deltas, seed = NA) {
+                   cluster_sep, llength, llength_disp, lateral_disp,
+                   allow_empty = FALSE, cluster_offset = NA, proj_dist_fn = "norm",
+                   point_dist_fn = "n-1", clusizes_fn = clusizes,
+                   clucenters_fn = clucenters, llengths_fn = llengths,
+                   angle_deltas_fn = angle_deltas, seed = NA) {
 
   # ############### #
   # Validate inputs #
@@ -372,4 +373,227 @@ clugen <- function(num_dims, num_clusters, num_points, direction, angle_disp,
        directions = cluster_directions,
        angles = cluster_angles,
        lengths = cluster_lengths)
+}
+
+#' Generality of types, by increasing order
+#' @keywords internal
+tprom <- list("logical" = 1,
+              "integer" = 2,
+              "double" = 3,
+              "complex" = 4,
+              "character" = 5,
+              "raw" = 6,
+              "list" = 7)
+
+#' Returns the actual dimensions of the input
+#'
+#' Gets the dimensions of the input `a`, returning `c(length(a), 1)` if
+#' `dim(a) == NULL`.
+#'
+#' @keywords internal
+gdim <- function(a) {
+  d <- dim(a)
+  if (is.null(d)) {
+    d <- c(length(a), 1)
+  }
+  d
+}
+
+#' Merges the fields (specified in `fields`) of two or more data sets
+#'
+#' @description
+#' Merges the fields (specified in `fields`) of two or more data sets (passed as
+#' lists). The fields to be merged need to have the same number of columns. The
+#' corresponding merged field will contain the rows of the fields to be merged,
+#' and will have a common "supertype".
+#'
+#' @details
+#' The `clusters_field` parameter specifies a field containing integers that
+#' identify the cluster to which the respective points belongs to. If
+#' `clusters_field` is specified (by default it's specified as `"clusters"`),
+#' cluster assignments in individual datasets will be updated in the merged
+#' dataset so that clusters are considered separate. This parameter can be set
+#' to `NA`, in which case no field will be considered as a special cluster
+#' assignments field.
+#'
+#' This function can be used to merge data sets generated with the [clugen]
+#' function, by default merging the `points` and `clusters` fields in those data
+#' sets. It also works with arbitrary data by specifying alternative fields in
+#' the `fields` parameter. It can be used, for example, to merge third-party
+#' data with [clugen]-generated data.
+#'
+#' @param ... One or more cluster data sets (in the form of lists) whose
+#' `fields` are to be merged.
+#' @param fields Fields to be merged, which must exist in the data sets given in
+#' `...`.
+#' @param clusters_field Field containing the integer cluster labels. If
+#' specified, cluster assignments in individual datasets will be updated in the
+#' merged dataset so that clusters are considered separate.
+#' @return A list whose fields consist of the merged fields in the original
+#' data sets.
+#'
+#' @export
+#' @examples
+#' a <- clugen(2, 5, 100, c(1, 3), 0.5, c(10, 10), 8, 1.5, 2)
+#' b <- clugen(2, 3, 250, c(-1, 3), 0.5, c(13, 14), 7, 1, 2)
+#' ab <- clumerge(a, b)
+clumerge <- function(...,
+                     fields = c("points", "clusters"),
+                     clusters_field = "clusters") {
+
+  # Number of elements in each array the merged dataset
+  numel <- 0
+
+  # Contains information about each field
+  fields_info <- list()
+
+  # Merged dataset to output, initially empty
+  output <- list()
+
+  # If a clusters field is given, add it
+  if (!is.na(clusters_field)) {
+    fields <- union(fields, clusters_field)
+  }
+
+  # Place variable input into list form
+  data <- list(...)
+
+  # Cycle through data items
+  for (dt in data) {
+
+    # Number of elements in the current item
+    numel_i <- NA
+
+    # Cycle through fields for the current item
+    for (field in fields) {
+
+      if (!(field %in% names(dt))) {
+        stop(paste0("Data item does not contain required field `", field, "`"))
+      }
+
+      # Get the field value
+      value <- dt[[field]]
+
+      # Number of elements in field value
+      numel_tmp <- gdim(value)[1]
+
+      # Check the number of elements in the field value
+      if (is.na(numel_i)) {
+        # First field: get number of elements in value (must be the same
+        # for the remaining field values)
+        numel_i <- numel_tmp
+      } else if (numel_tmp != numel_i) {
+        # Fields values after the first must have the same number of elements
+        stop(paste0("Data item contains fields with different sizes (",
+                    numel_tmp, " != ", numel_i, ")"))
+      }
+
+      # Get/check info about the field value type
+      field_cols <- gdim(value)[2]
+      field_type <- typeof(value)
+      field_fact <- is.factor(value)
+
+      if (!(field %in% names(fields_info))) {
+
+        # If it's the first time this field appears, just get the info
+        fields_info[[field]] <- list(type = field_type,
+                                     ncol = field_cols,
+                                     fact = field_fact)
+
+        # If it's the clusters field, it needs to have no dimensionality
+        if (!is.na(clusters_field) && field == clusters_field) {
+          if (!is.null(dim(value))) {
+            stop(paste0("Clusters field `",
+                        clusters_field,
+                        "` has more than one dimension"))
+          }
+          if (typeof(value) != "integer") {
+            stop(paste0("`", clusters_field, "` must contain integer types"))
+          }
+        }
+
+      } else {
+        # If this field already appeared in previous data items...
+
+        # ...check that the number of columns is the same than that of previous
+        # data items
+        if (field_cols != fields_info[[field]]$ncol) {
+          stop(paste0("Dimension mismatch in field `", field, "`"))
+        }
+
+        # ...check if previous items were factors, this item must be too (or
+        # vice-versa)
+        if (field_fact != fields_info[[field]]$fact) {
+          stop(paste0("Factor mismatch in field `", field, "`"))
+        }
+
+        # Determine most broad type between values
+        if (tprom[[field_type]] > fields_info[[field]]$type) {
+          fields_info[[field]]$type <- tprom[[field_type]]
+        }
+      }
+    }
+
+    # Update total number of elements
+    numel <- numel + numel_i
+  }
+
+  # Initialize output dictionary fields with room for all items
+  for (field in names(fields_info)) {
+    output[[field]] <- vector(mode = fields_info[[field]]$type,
+                              length = numel * fields_info[[field]]$ncol)
+
+    if (fields_info[[field]]$ncol > 1) {
+      dim(output[[field]]) <- c(numel, fields_info[[field]]$ncol)
+    }
+  }
+
+  # Copy items from input data to output dictionary, field-wise
+  copied <- 0
+  last_cluster <- 0
+
+  # Create merged output
+  for (dt in data) {
+
+    # How many elements to copy for the current data item?
+    tocopy <- gdim(dt[[fields[1]]])[1]
+
+    # Cycle through each field and its information
+    for (field in names(fields_info)) {
+
+      ncol <- fields_info[[field]]$ncol
+      # Copy elements
+      if (ncol == 1) {
+        output[[field]][(copied + 1):(copied + tocopy)] <-
+          if (!is.na(clusters_field) && field == clusters_field) {
+            # If this is a clusters field, update the cluster IDs
+            old_clusters <- unique(dt[[clusters_field]])
+            new_clusters <- (last_cluster + 1):(last_cluster + length(old_clusters))
+            last_cluster <- new_clusters[length(new_clusters)]
+            new_clusters[match(dt[[field]], old_clusters)]
+          } else if (fields_info[[field]]$fact) {
+            # If not, are they factors?
+            as.numeric(levels(dt[[field]]))[dt[[field]]]
+          } else {
+            # Otherwise just copy the elements
+            dt[[field]]
+          }
+      } else {
+        output[[field]][(copied + 1):(copied + tocopy), ] <- dt[[field]]
+      }
+    }
+
+    # Update how many were copied so far
+    copied <- copied + tocopy
+  }
+
+  # Set factor according to original data
+  for (field in names(fields_info)) {
+    fi <- fields_info[[field]]
+    if (fi$fact) {
+      output[[field]] <- factor(output[[field]])
+    }
+  }
+
+  output
 }
