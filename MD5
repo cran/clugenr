@@ -1,4 +1,4 @@
-e08f703128e7891499e4cd3edb7e2296 *DESCRIPTION
+916aebdbe697c2bb112e7074c781e2be *DESCRIPTION
 a765972321b6b24c44baf57c61f19cd5 *LICENSE
 f48a5cd6c73cd908f7546bd7aa685da7 *NAMESPACE
 8e9b271c4f55a26da47a15b1c81f6651 *R/clugenr.R
@@ -6,11 +6,11 @@ f48a5cd6c73cd908f7546bd7aa685da7 *NAMESPACE
 1934976abe9b70b834c610bb5d96e861 *R/helper.R
 e6fd362e0897a7e474e770707b3923bf *R/main.R
 962a39d999601c20aa2765ea7473423a *R/module.R
-8659c3ab3c5edd5da46c3ae13603675c *README.md
-70f8040a1b383ec8c45714d8c37862cd *build/clugenr.pdf
-8a10fdef545f9b75c83ab5e5a927d7f9 *build/stage23.rdb
-8599af9fbb1008e619a03e34303968be *build/vignette.rds
-076601fed146f6afb546c938a1f53599 *inst/CITATION
+5cc6e1a6c3697858bf3512057e03bcf2 *README.md
+08ac922e93de8ffa7241075eb389fb14 *build/clugenr.pdf
+64df29995ae1f0b3ef55b7dea0c1c8e7 *build/stage23.rdb
+ae5735cd7dd66fdf24c0f1f99f3d7ba1 *build/vignette.rds
+8259a5fdb6df48aa183059cb3822e3d4 *inst/CITATION
 dab5eae3f71e728e862cdcfd58255c92 *inst/doc/dev.R
 a5a7e84ea19e865c9d7c4e1587e6407b *inst/doc/dev.Rmd
 46bcf022ef02fd9fd2142e8bcf4b0929 *inst/doc/dev.html
@@ -19,10 +19,10 @@ a5a7e84ea19e865c9d7c4e1587e6407b *inst/doc/dev.Rmd
 233ec2f73699c4229d1286a621c0c3d8 *inst/doc/examples2d.html
 cf9f04810da37086ee949b793c193e23 *inst/doc/examples3d1.R
 9ec006bbe2b504b793a75fe0fb0b1abc *inst/doc/examples3d1.Rmd
-04c744821a5d0ac5c34d446e95c6f7c5 *inst/doc/examples3d1.html
+c306592af309864a28cad75e3bbf3ac5 *inst/doc/examples3d1.html
 045983f83612deb7cd8e0130da1a6885 *inst/doc/examples3d2.R
 31ded54d15fa175bbdee91de23cf6587 *inst/doc/examples3d2.Rmd
-1d6f107449371859649c1f701ec63c88 *inst/doc/examples3d2.html
+2f4aa152d4e352b52ca56e1451ff8083 *inst/doc/examples3d2.html
 f03a565bd387fadee34e059664b9101d *inst/doc/examplesmrg.R
 5765428e5a0cb403b2f1af88195c4d5b *inst/doc/examplesmrg.Rmd
 aa866cf9bfd2503f32fd40f917ca87ef *inst/doc/examplesmrg.html
