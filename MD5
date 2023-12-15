@@ -1,4 +1,4 @@
-c6804c0792898890c0eae307c487f1a3 *DESCRIPTION
+116c1680044dec0b839998d4e939a236 *DESCRIPTION
 a765972321b6b24c44baf57c61f19cd5 *LICENSE
 f48a5cd6c73cd908f7546bd7aa685da7 *NAMESPACE
 b3a48668bfd45007932b010e302a99db *R/clugenr-package.R
@@ -7,9 +7,9 @@ b3a48668bfd45007932b010e302a99db *R/clugenr-package.R
 8dc003516afbb1577fb6624ec9271101 *R/main.R
 69a75f59f52b6fc3ec4343098b4b1eba *R/module.R
 5cc6e1a6c3697858bf3512057e03bcf2 *README.md
-44e84f9cde97b724a8634497acb90724 *build/clugenr.pdf
-ab66a79dcde9800cc703534b435ab018 *build/stage23.rdb
-ae5735cd7dd66fdf24c0f1f99f3d7ba1 *build/vignette.rds
+1d1e037c474b121012c28b415f607aed *build/clugenr.pdf
+2d8d9118e83fe9dbd766177f97099439 *build/stage23.rdb
+14ea7fbc163055575b16c72d95537262 *build/vignette.rds
 8259a5fdb6df48aa183059cb3822e3d4 *inst/CITATION
 dab5eae3f71e728e862cdcfd58255c92 *inst/doc/dev.R
 a5a7e84ea19e865c9d7c4e1587e6407b *inst/doc/dev.Rmd
@@ -19,10 +19,10 @@ a5a7e84ea19e865c9d7c4e1587e6407b *inst/doc/dev.Rmd
 cb1b10beb17b6951762af59979281a80 *inst/doc/examples2d.html
 cf9f04810da37086ee949b793c193e23 *inst/doc/examples3d1.R
 9ec006bbe2b504b793a75fe0fb0b1abc *inst/doc/examples3d1.Rmd
-f48d42e55e69687cfbca3d211d7f8ed4 *inst/doc/examples3d1.html
+1b5b1c270c845eb855f4db57249cf5c5 *inst/doc/examples3d1.html
 eaf0033e0ce03269632602549149ab5b *inst/doc/examples3d2.R
 238d1ba43bbd2ffb4a68e2c6b0dcec3c *inst/doc/examples3d2.Rmd
-8feaeb9cabaae50d2177ad3b7537fdec *inst/doc/examples3d2.html
+bec38666c1be6c83d2e767a78547875a *inst/doc/examples3d2.html
 857d70f37dee65f2679e20ff390304fb *inst/doc/examplesmrg.R
 a8d9b8a9402bd45be62e306e866f8e75 *inst/doc/examplesmrg.Rmd
 810ec3437532c3599cb6fad46f2703a5 *inst/doc/examplesmrg.html
@@ -30,7 +30,7 @@ a8d9b8a9402bd45be62e306e866f8e75 *inst/doc/examplesmrg.Rmd
 8da4ed9aa013055e907400132358d0b5 *inst/doc/examplesnd.Rmd
 7d97ad8c7d4d1a69fc27f2e35cb01cbb *inst/doc/examplesnd.html
 3c9e2d06e8560272e30c98b0c827478b *inst/doc/theory.R
-2350d48ead78a8bd5ceb57e9cb1e1938 *inst/doc/theory.Rmd
+d66330833d2f2edfe2a1a037355684bf *inst/doc/theory.Rmd
 3172ef6021d88bdd88778dd0ef7587ed *inst/doc/theory.html
 e7e1965eeb50e5eee238cbc4c41c864a *man/angle_btw.Rd
 e6da8862ca383949dba2b42baddf8b2d *man/angle_deltas.Rd
@@ -84,4 +84,4 @@ a8d9b8a9402bd45be62e306e866f8e75 *vignettes/examplesmrg.Rmd
 e398410fd504b6458f229c32767aa491 *vignettes/plot_examples_2d.R
 f0fc84681c71b2177bb2becce8228dde *vignettes/plot_examples_3d.R
 556bbaf6f941a54acf224299f9600484 *vignettes/plot_examples_nd.R
-2350d48ead78a8bd5ceb57e9cb1e1938 *vignettes/theory.Rmd
+d66330833d2f2edfe2a1a037355684bf *vignettes/theory.Rmd
