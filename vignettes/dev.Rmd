@@ -1,6 +1,9 @@
 ---
 title: "Development"
-output: rmarkdown::html_vignette
+output:
+  prettydoc::html_pretty:
+    theme: tactile
+    highlight: vignette
 vignette: >
   %\VignetteIndexEntry{Development}
   %\VignetteEngine{knitr::rmarkdown}
@@ -10,7 +13,9 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  out.width = "100%",
+  dpi = 120
 )
 ```
 

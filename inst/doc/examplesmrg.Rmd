@@ -1,6 +1,9 @@
 ---
 title: "Merging and hierarchical cluster examples"
-output: rmarkdown::html_vignette
+output:
+  prettydoc::html_pretty:
+    theme: tactile
+    highlight: vignette
 vignette: >
   %\VignetteIndexEntry{Merging and hierarchical cluster examples}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,7 +17,7 @@ knitr::opts_chunk$set(
   comment = "#>",
   out.width = "100%",
   fig.asp = 0.5,
-  dpi = 200
+  dpi = 120
 )
 ```
 

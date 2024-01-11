@@ -1,7 +1,9 @@
 ## ---- include = FALSE---------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  out.width = "100%",
+  dpi = 120
 )
 
 ## ----setup, include=FALSE-----------------------------------------------------

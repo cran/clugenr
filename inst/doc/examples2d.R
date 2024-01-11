@@ -4,7 +4,7 @@ knitr::opts_chunk$set(
   comment = "#>",
   out.width = "100%",
   fig.asp = 0.5,
-  dpi = 200
+  dpi = 120
 )
 
 ## ----setup, message=FALSE, warning=FALSE--------------------------------------
