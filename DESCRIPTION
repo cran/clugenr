@@ -1,6 +1,6 @@
 Package: clugenr
 Title: Multidimensional Cluster Generation Using Support Lines
-Version: 1.0.3
+Version: 1.0.4
 Authors@R: 
     person(given = "Nuno",
            family = "Fachada",
@@ -22,12 +22,13 @@ URL: https://clugen.github.io/clugenr/,
         https://github.com/clugen/clugenr
 BugReports: https://github.com/clugen/clugenr/issues
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2024-01-11 11:56:39 UTC; nuno
-Author: Nuno Fachada [aut, cre, cph] (<https://orcid.org/0000-0002-8487-5837>)
+Packaged: 2025-07-07 18:42:55 UTC; nuno
+Author: Nuno Fachada [aut, cre, cph] (ORCID:
+    <https://orcid.org/0000-0002-8487-5837>)
 Maintainer: Nuno Fachada <faken@fakenmc.com>
 Repository: CRAN
-Date/Publication: 2024-01-11 12:20:02 UTC
+Date/Publication: 2025-07-07 19:00:06 UTC
